@@ -125,20 +125,22 @@ export const SbomUpload: React.FC = () => {
               </FormGroup>
             </PageSection>
           )}
-          <PageSection hidden={isScoped && !group}>
-            <UploadFiles
-              fileUploadProps={{ "aria-label": "sbom-uploader" }}
-              uploads={uploads}
-              handleUpload={handleUpload}
-              handleRemoveUpload={handleRemoveUpload}
-              extractSuccessMessage={(
-                response: AxiosResponse<{ document_id: string }>,
-              ) => {
-                return `${response.data.document_id} uploaded`;
-              }}
-              extractErrorMessage={getAxiosErrorMessage}
-            />
-          </PageSection>
+          {(!isScoped || group) && (
+            <PageSection>
+              <UploadFiles
+                fileUploadProps={{ "aria-label": "sbom-uploader" }}
+                uploads={uploads}
+                handleUpload={handleUpload}
+                handleRemoveUpload={handleRemoveUpload}
+                extractSuccessMessage={(
+                  response: AxiosResponse<{ document_id: string }>,
+                ) => {
+                  return `${response.data.document_id} uploaded`;
+                }}
+                extractErrorMessage={getAxiosErrorMessage}
+              />
+            </PageSection>
+          )}
         </>
       )}
     </>
