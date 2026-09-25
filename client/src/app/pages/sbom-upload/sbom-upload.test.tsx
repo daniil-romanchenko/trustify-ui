@@ -64,6 +64,7 @@ describe("SbomUpload", () => {
     renderPage();
 
     expect(screen.queryByLabelText("Group to upload into")).toBeNull();
+    expect(screen.getByLabelText("sbom-uploader")).toBeInTheDocument();
   });
 
   it("requires choosing a group, when access is scoped", () => {
@@ -80,8 +81,9 @@ describe("SbomUpload", () => {
       screen.getByRole("option", { name: "Payments" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Other team" })).toBeNull();
-    // no group is used for uploads until one was chosen
+    // uploading is only offered once a group was chosen
     expect(mockedUseUploadSBOM).toHaveBeenLastCalledWith(undefined);
+    expect(screen.queryByLabelText("sbom-uploader")).toBeNull();
   });
 
   it("tells the user when uploading isn't permitted", () => {
