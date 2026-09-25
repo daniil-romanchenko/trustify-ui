@@ -127,26 +127,28 @@ export const SbomUpload: React.FC = () => {
               </FormGroup>
             </PageSection>
           )}
-          <PageSection hidden={isScoped && !group}>
-            <UploadFiles
-              fileUploadProps={{ "aria-label": "sbom-uploader" }}
-              uploads={uploads}
-              handleUpload={handleUpload}
-              handleRemoveUpload={handleRemoveUpload}
-              isDuplicate={(response: AxiosResponse<IngestResult>) =>
-                response.data.duplicate === true
-              }
-              extractSuccessMessage={(
-                response: AxiosResponse<IngestResult>,
-              ) => {
-                if (response.data.duplicate) {
-                  return `${response.data.document_id ?? response.data.id} already uploaded`;
+          {(!isScoped || group) && (
+            <PageSection>
+              <UploadFiles
+                fileUploadProps={{ "aria-label": "sbom-uploader" }}
+                uploads={uploads}
+                handleUpload={handleUpload}
+                handleRemoveUpload={handleRemoveUpload}
+                isDuplicate={(response: AxiosResponse<IngestResult>) =>
+                  response.data.duplicate === true
                 }
-                return `${response.data.document_id} uploaded`;
-              }}
-              extractErrorMessage={getAxiosErrorMessage}
-            />
-          </PageSection>
+                extractSuccessMessage={(
+                  response: AxiosResponse<IngestResult>,
+                ) => {
+                  if (response.data.duplicate) {
+                    return `${response.data.document_id ?? response.data.id} already uploaded`;
+                  }
+                  return `${response.data.document_id} uploaded`;
+                }}
+                extractErrorMessage={getAxiosErrorMessage}
+              />
+            </PageSection>
+          )}
         </>
       )}
     </>
