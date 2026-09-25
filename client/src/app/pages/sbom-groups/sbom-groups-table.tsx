@@ -202,7 +202,7 @@ const SbomGroupRow: React.FC<{
           <SbomGroupTableData item={node} />
         </Td>
         <Td isActionCell style={{ verticalAlign: "middle" }}>
-          <ActionsColumn items={actions} />
+          {actions.length > 0 && <ActionsColumn items={actions} />}
         </Td>
       </TreeRowWrapper>
       {isExpanded && (
