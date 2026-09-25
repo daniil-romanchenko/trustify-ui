@@ -20,6 +20,7 @@ import type { SbomHead } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog";
 import { LabelsAsList } from "@app/components/LabelsAsList";
 import { NotificationsContext } from "@app/components/NotificationsContext";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
 import {
@@ -47,6 +48,9 @@ import { SbomSearchContext } from "./sbom-context";
 export const SbomTable: React.FC = () => {
   const { pushNotification } = React.useContext(NotificationsContext);
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
+  const canUpdate = hasPermission("update.sbom");
+  const canDelete = hasPermission("delete.sbom");
 
   const {
     sbomGroupId,
@@ -254,16 +258,20 @@ export const SbomTable: React.FC = () => {
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
-                          {
-                            title: "Edit labels",
-                            onClick: () => {
-                              setEditLabelsModalState(item);
-                            },
-                            isDisabled: areMutationsDisabled,
-                          },
-                          {
-                            isSeparator: true,
-                          },
+                          ...(canUpdate
+                            ? [
+                                {
+                                  title: "Edit labels",
+                                  onClick: () => {
+                                    setEditLabelsModalState(item);
+                                  },
+                                  isDisabled: areMutationsDisabled,
+                                },
+                                {
+                                  isSeparator: true,
+                                },
+                              ]
+                            : []),
                           {
                             title: "Download SBOM",
                             onClick: () => {
@@ -276,17 +284,21 @@ export const SbomTable: React.FC = () => {
                               downloadSBOMLicenses(item.id);
                             },
                           },
-                          {
-                            isSeparator: true,
-                          },
-                          {
-                            title: "Delete",
-                            onClick: () => {
-                              setSbomToDelete(item);
-                            },
-                            isDisabled: areMutationsDisabled,
-                          },
-                          ...(sbomGroupId
+                          ...(canDelete
+                            ? [
+                                {
+                                  isSeparator: true,
+                                },
+                                {
+                                  title: "Delete",
+                                  onClick: () => {
+                                    setSbomToDelete(item);
+                                  },
+                                  isDisabled: areMutationsDisabled,
+                                },
+                              ]
+                            : []),
+                          ...(sbomGroupId && canUpdate
                             ? [
                                 {
                                   title: "Delete SBOM from group",

@@ -36,6 +36,7 @@ import {
   type ConfirmDialogProps,
 } from "@app/components/ConfirmDialog";
 import { NotificationsContext } from "@app/components/NotificationsContext";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import {
   useFetchImporterReports,
@@ -85,6 +86,8 @@ const getImporterStatus = (importer: Importer): ImporterStatus => {
 export const ImporterList: React.FC = () => {
   const { pushNotification } = React.useContext(NotificationsContext);
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
+  const canUpdateImporters = hasPermission("update.importer");
 
   // Actions that each row can trigger
   type RowAction = "enable" | "disable" | "run";
@@ -387,34 +390,36 @@ export const ImporterList: React.FC = () => {
                         <Td isActionCell>
                           <ActionsColumn
                             items={[
-                              ...(isImporterDisabled
-                                ? [
-                                    {
-                                      title: "Enable",
-                                      onClick: () => {
-                                        prepareActionOnRow("enable", item);
+                              ...(!canUpdateImporters
+                                ? []
+                                : isImporterDisabled
+                                  ? [
+                                      {
+                                        title: "Enable",
+                                        onClick: () => {
+                                          prepareActionOnRow("enable", item);
+                                        },
+                                        isDisabled: areMutationsDisabled,
                                       },
-                                      isDisabled: areMutationsDisabled,
-                                    },
-                                  ]
-                                : [
-                                    {
-                                      title: "Run",
-                                      onClick: () => {
-                                        prepareActionOnRow("run", item);
+                                    ]
+                                  : [
+                                      {
+                                        title: "Run",
+                                        onClick: () => {
+                                          prepareActionOnRow("run", item);
+                                        },
+                                        isDisabled:
+                                          importerStatus === "running" ||
+                                          areMutationsDisabled,
                                       },
-                                      isDisabled:
-                                        importerStatus === "running" ||
-                                        areMutationsDisabled,
-                                    },
-                                    {
-                                      title: "Disable",
-                                      onClick: () => {
-                                        prepareActionOnRow("disable", item);
+                                      {
+                                        title: "Disable",
+                                        onClick: () => {
+                                          prepareActionOnRow("disable", item);
+                                        },
+                                        isDisabled: areMutationsDisabled,
                                       },
-                                      isDisabled: areMutationsDisabled,
-                                    },
-                                  ]),
+                                    ]),
                             ]}
                           />
                         </Td>

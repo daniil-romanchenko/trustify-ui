@@ -15,6 +15,7 @@ import {
 import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
 
 import { DocumentMetadata } from "@app/components/DocumentMetadata";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { UploadFiles } from "@app/components/UploadFiles";
 import { useUploadAdvisory } from "@app/queries/advisories";
@@ -23,7 +24,20 @@ import { getAxiosErrorMessage } from "@app/utils/utils";
 
 export const AdvisoryUpload: React.FC = () => {
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
   const { uploads, handleUpload, handleRemoveUpload } = useUploadAdvisory();
+
+  const unavailable = areMutationsDisabled
+    ? {
+        title: "Uploads unavailable",
+        body: "This instance is running in read-only mode. Uploading advisories is not available.",
+      }
+    : !hasPermission("create.advisory")
+      ? {
+          title: "Uploads not permitted",
+          body: "You don't have permission to upload advisories.",
+        }
+      : null;
 
   return (
     <>
@@ -36,17 +50,14 @@ export const AdvisoryUpload: React.FC = () => {
           <BreadcrumbItem isActive>Upload Advisory</BreadcrumbItem>
         </Breadcrumb>
       </PageSection>
-      {areMutationsDisabled ? (
+      {unavailable ? (
         <PageSection>
           <EmptyState
             headingLevel="h1"
             icon={LockIcon}
-            titleText="Uploads unavailable"
+            titleText={unavailable.title}
           >
-            <EmptyStateBody>
-              This instance is running in read-only mode. Uploading advisories
-              is not available.
-            </EmptyStateBody>
+            <EmptyStateBody>{unavailable.body}</EmptyStateBody>
             <EmptyStateFooter>
               <Link to={Paths.advisories}>Return to advisories</Link>
             </EmptyStateFooter>

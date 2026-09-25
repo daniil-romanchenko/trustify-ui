@@ -10,20 +10,59 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateFooter,
+  FormGroup,
+  FormSelect,
+  FormSelectOption,
   PageSection,
 } from "@patternfly/react-core";
 import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
 
+import { MAX_ITEMS_PER_PAGE } from "@app/Constants";
 import { DocumentMetadata } from "@app/components/DocumentMetadata";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { UploadFiles } from "@app/components/UploadFiles";
+import { useFetchSBOMGroups } from "@app/queries/sbom-groups";
 import { useUploadSBOM } from "@app/queries/sboms";
 import { Paths } from "@app/Routes";
 import { getAxiosErrorMessage } from "@app/utils/utils";
 
 export const SbomUpload: React.FC = () => {
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
-  const { uploads, handleUpload, handleRemoveUpload } = useUploadSBOM();
+  const { isScoped, hasPermission, groupsWith } =
+    React.useContext(PermissionsContext);
+
+  // with scoped access, uploads must go into a group the user may upload into
+  const [group, setGroup] = React.useState<string>("");
+  const { result: visibleGroups } = useFetchSBOMGroups(
+    null,
+    { page: { pageNumber: 1, itemsPerPage: MAX_ITEMS_PER_PAGE } },
+    {},
+    isScoped,
+  );
+  const uploadGroups = React.useMemo(() => {
+    const allowed = new Set(groupsWith("create.sbom"));
+    return visibleGroups.data
+      .filter((item) => allowed.has(item.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [visibleGroups.data, groupsWith]);
+
+  const { uploads, handleUpload, handleRemoveUpload } = useUploadSBOM(
+    group || undefined,
+  );
+
+  const unavailable = areMutationsDisabled
+    ? {
+        title: "Uploads unavailable",
+        body: "This instance is running in read-only mode. Uploading SBOMs is not available.",
+      }
+    : !hasPermission("create.sbom") ||
+        (isScoped && groupsWith("create.sbom").length === 0)
+      ? {
+          title: "Uploads not permitted",
+          body: "You don't have permission to upload SBOMs.",
+        }
+      : null;
 
   return (
     <>
@@ -36,17 +75,14 @@ export const SbomUpload: React.FC = () => {
           <BreadcrumbItem isActive>Upload SBOM</BreadcrumbItem>
         </Breadcrumb>
       </PageSection>
-      {areMutationsDisabled ? (
+      {unavailable ? (
         <PageSection>
           <EmptyState
             headingLevel="h1"
             icon={LockIcon}
-            titleText="Uploads unavailable"
+            titleText={unavailable.title}
           >
-            <EmptyStateBody>
-              This instance is running in read-only mode. Uploading SBOMs is not
-              available.
-            </EmptyStateBody>
+            <EmptyStateBody>{unavailable.body}</EmptyStateBody>
             <EmptyStateFooter>
               <Link to={Paths.sboms}>Return to SBOMs</Link>
             </EmptyStateFooter>
@@ -64,7 +100,32 @@ export const SbomUpload: React.FC = () => {
               </Content>
             </Content>
           </PageSection>
-          <PageSection>
+          {isScoped && (
+            <PageSection>
+              <FormGroup label="Group" isRequired fieldId="sbom-upload-group">
+                <FormSelect
+                  id="sbom-upload-group"
+                  aria-label="Group to upload into"
+                  value={group}
+                  onChange={(_event, value) => setGroup(value)}
+                >
+                  <FormSelectOption
+                    value=""
+                    label="Select the group to upload into"
+                    isPlaceholder
+                  />
+                  {uploadGroups.map((item) => (
+                    <FormSelectOption
+                      key={item.id}
+                      value={item.id}
+                      label={item.name}
+                    />
+                  ))}
+                </FormSelect>
+              </FormGroup>
+            </PageSection>
+          )}
+          <PageSection hidden={isScoped && !group}>
             <UploadFiles
               fileUploadProps={{ "aria-label": "sbom-uploader" }}
               uploads={uploads}
