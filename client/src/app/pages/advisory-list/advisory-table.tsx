@@ -28,6 +28,7 @@ import type { AdvisoryHead, AdvisorySummary } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog.tsx";
 import { LabelsAsList } from "@app/components/LabelsAsList.tsx";
 import { NotificationsContext } from "@app/components/NotificationsContext";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
 import {
@@ -48,6 +49,7 @@ import { advisoryDeleteDialogProps } from "@app/Constants";
 export const AdvisoryTable: React.FC = () => {
   const { pushNotification } = React.useContext(NotificationsContext);
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
 
   const { isFetching, fetchError, tableControls } = React.useContext(
     AdvisorySearchContext,
@@ -216,13 +218,17 @@ export const AdvisoryTable: React.FC = () => {
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
-                          {
-                            title: "Edit labels",
-                            onClick: () => {
-                              setEditLabelsModalState(item);
-                            },
-                            isDisabled: areMutationsDisabled,
-                          },
+                          ...(hasPermission("update.advisory")
+                            ? [
+                                {
+                                  title: "Edit labels",
+                                  onClick: () => {
+                                    setEditLabelsModalState(item);
+                                  },
+                                  isDisabled: areMutationsDisabled,
+                                },
+                              ]
+                            : []),
                           {
                             title: "Download",
                             onClick: () => {
@@ -232,14 +238,18 @@ export const AdvisoryTable: React.FC = () => {
                               );
                             },
                           },
-                          { isSeparator: true },
-                          {
-                            title: "Delete",
-                            onClick: () => {
-                              setAdvisoryToDelete(item);
-                            },
-                            isDisabled: areMutationsDisabled,
-                          },
+                          ...(hasPermission("delete.advisory")
+                            ? [
+                                { isSeparator: true },
+                                {
+                                  title: "Delete",
+                                  onClick: () => {
+                                    setAdvisoryToDelete(item);
+                                  },
+                                  isDisabled: areMutationsDisabled,
+                                },
+                              ]
+                            : []),
                         ]}
                       />
                     </Td>

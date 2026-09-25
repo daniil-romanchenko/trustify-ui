@@ -56,10 +56,15 @@ export const uploadAdvisory = (
   });
 };
 
-export const uploadSbom = (formData: FormData, config?: AxiosRequestConfig) => {
+export const uploadSbom = (
+  formData: FormData,
+  config?: AxiosRequestConfig,
+  group?: string,
+) => {
   const file = formData.get(FORM_DATA_FILE_KEY) as File;
   return axios.post<IngestResult>(`${SBOMS}`, file, {
     ...config,
+    params: group ? { ...config?.params, group } : config?.params,
     headers: { "Content-Type": getContentTypeFromFile(file) },
   });
 };

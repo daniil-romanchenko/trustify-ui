@@ -7,6 +7,7 @@ import { ThemeProvider, type ThemeMode } from "@tsd-ui/core";
 import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { NotificationsProvider } from "./components/NotificationsContext";
+import { PermissionsProvider } from "./components/PermissionsContext";
 import { ReadOnlyProvider } from "./components/ReadOnlyContext";
 import { DefaultLayout } from "./layout";
 
@@ -25,11 +26,13 @@ const App: React.FC = () => {
   return (
     <ThemeProvider mode={mode} setMode={setMode}>
       <ReadOnlyProvider>
-        <NotificationsProvider>
-          <DefaultLayout>
-            <Outlet />
-          </DefaultLayout>
-        </NotificationsProvider>
+        <PermissionsProvider>
+          <NotificationsProvider>
+            <DefaultLayout>
+              <Outlet />
+            </DefaultLayout>
+          </NotificationsProvider>
+        </PermissionsProvider>
       </ReadOnlyProvider>
     </ThemeProvider>
   );

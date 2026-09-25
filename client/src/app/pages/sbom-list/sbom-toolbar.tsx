@@ -13,6 +13,7 @@ import {
 import type { Group } from "@app/client";
 import { FilterToolbar } from "@app/components/FilterToolbar";
 import { KebabDropdown } from "@app/components/KebabDropdown";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyButton } from "@app/components/ReadOnlyButton";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
@@ -38,6 +39,7 @@ export const SbomToolbar: React.FC<SbomToolbarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
   const isRecommendationEnabled = useIsRecommendationEnabled();
 
   // Create Form Modal
@@ -86,35 +88,43 @@ export const SbomToolbar: React.FC<SbomToolbarProps> = ({
           {showFilters && <FilterToolbar {...filterToolbarProps} />}
           {showActions && (
             <>
-              <ToolbarItem>
-                <ReadOnlyButton
-                  variant="primary"
-                  onClick={() => setSaveGroupModalState("create")}
-                >
-                  Create group
-                </ReadOnlyButton>
-              </ToolbarItem>
-              <ToolbarItem>
-                <ReadOnlyButton
-                  variant="secondary"
-                  isDisabled={selectedItems.length === 0}
-                  onClick={() => setIsAddToGroupModalOpen(true)}
-                >
-                  Add to group
-                </ReadOnlyButton>
-              </ToolbarItem>
+              {hasPermission("create.sbomGroup") && (
+                <ToolbarItem>
+                  <ReadOnlyButton
+                    variant="primary"
+                    onClick={() => setSaveGroupModalState("create")}
+                  >
+                    Create group
+                  </ReadOnlyButton>
+                </ToolbarItem>
+              )}
+              {hasPermission("update.sbom") && (
+                <ToolbarItem>
+                  <ReadOnlyButton
+                    variant="secondary"
+                    isDisabled={selectedItems.length === 0}
+                    onClick={() => setIsAddToGroupModalOpen(true)}
+                  >
+                    Add to group
+                  </ReadOnlyButton>
+                </ToolbarItem>
+              )}
               <ToolbarItem>
                 <KebabDropdown
                   ariaLabel="SBOM actions"
                   dropdownItems={[
-                    <DropdownItem
-                      key="upload-sbom"
-                      component="button"
-                      isDisabled={areMutationsDisabled}
-                      onClick={() => navigate(Paths.sbomUpload)}
-                    >
-                      Upload SBOM
-                    </DropdownItem>,
+                    ...(hasPermission("create.sbom")
+                      ? [
+                          <DropdownItem
+                            key="upload-sbom"
+                            component="button"
+                            isDisabled={areMutationsDisabled}
+                            onClick={() => navigate(Paths.sbomUpload)}
+                          >
+                            Upload SBOM
+                          </DropdownItem>,
+                        ]
+                      : []),
                     <DropdownItem
                       key="scan-sbom"
                       component="button"

@@ -39,6 +39,7 @@ import type { SbomHead } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog";
 import { LoadingWrapper } from "@tsd-ui/core";
 import { NotificationsContext } from "@app/components/NotificationsContext";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { useDownload } from "@app/hooks/domain-controls/useDownload";
 import { useTabControls } from "@app/hooks/tab-controls";
 import { useDeleteSbomMutation, useFetchSBOMById } from "@app/queries/sboms";
@@ -52,6 +53,7 @@ import { DocumentMetadata } from "@app/components/DocumentMetadata";
 export const SbomDetails: React.FC = () => {
   const navigate = useNavigate();
   const { pushNotification } = React.useContext(NotificationsContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
 
   const sbomId = useRouteParams(PathParam.SBOM_ID);
   const { sbom, isFetching, fetchError } = useFetchSBOMById(sbomId);
@@ -178,13 +180,17 @@ export const SbomDetails: React.FC = () => {
                   >
                     Download License Report
                   </DropdownItem>
-                  <Divider component="li" key="separator" />
-                  <DropdownItem
-                    key="delete"
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                  >
-                    Delete
-                  </DropdownItem>
+                  {hasPermission("delete.sbom") && (
+                    <>
+                      <Divider component="li" key="separator" />
+                      <DropdownItem
+                        key="delete"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                      >
+                        Delete
+                      </DropdownItem>
+                    </>
+                  )}
                 </DropdownList>
               </Dropdown>
             )}

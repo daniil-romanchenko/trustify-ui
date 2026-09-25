@@ -3,6 +3,7 @@ import React from "react";
 import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core";
 
 import { FilterToolbar } from "@app/components/FilterToolbar";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyButton } from "@app/components/ReadOnlyButton";
 import { SimplePagination } from "@app/components/SimplePagination";
 
@@ -11,6 +12,7 @@ import { SbomGroupsContext } from "./sbom-groups-context";
 export const SbomGroupsToolbar: React.FC = () => {
   const { tableControls, setGroupCreateUpdateModalState } =
     React.useContext(SbomGroupsContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
 
   const {
     propHelpers: {
@@ -25,14 +27,16 @@ export const SbomGroupsToolbar: React.FC = () => {
     <Toolbar {...toolbarProps} aria-label="sbom-groups-toolbar">
       <ToolbarContent>
         <FilterToolbar {...filterToolbarProps} />
-        <ToolbarItem>
-          <ReadOnlyButton
-            variant="primary"
-            onClick={() => setGroupCreateUpdateModalState("create")}
-          >
-            Create group
-          </ReadOnlyButton>
-        </ToolbarItem>
+        {hasPermission("create.sbomGroup") && (
+          <ToolbarItem>
+            <ReadOnlyButton
+              variant="primary"
+              onClick={() => setGroupCreateUpdateModalState("create")}
+            >
+              Create group
+            </ReadOnlyButton>
+          </ToolbarItem>
+        )}
         <ToolbarItem {...paginationToolbarItemProps}>
           <SimplePagination
             idPrefix="sbom-groups-table"
