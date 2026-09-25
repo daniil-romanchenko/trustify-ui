@@ -42,6 +42,7 @@ import {
 } from "@patternfly/react-table";
 
 import { LoadingWrapper } from "@tsd-ui/core";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { PackageQualifiers } from "@app/components/PackageQualifiers";
 import { SbomVulnerabilitiesDonutChart } from "@app/components/SbomVulnerabilitiesDonutChart";
@@ -90,6 +91,8 @@ export const VulnerabilitiesBySbom: React.FC<VulnerabilitiesBySbomProps> = ({
   } = useVulnerabilitiesOfSbom(sbomId);
 
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
+  const canAnalyze = hasPermission("create.exploitIntelligence");
   const isEiEnabled = useIsExploitIntelligenceEnabled();
 
   const [showErrorBanner, setShowErrorBanner] = React.useState(false);
@@ -459,7 +462,9 @@ export const VulnerabilitiesBySbom: React.FC<VulnerabilitiesBySbomProps> = ({
                             state={eiState ?? { kind: "not_run" }}
                             onRequestAnalysis={handleRequestAnalysis}
                             isDisabled={
-                              areMutationsDisabled || submitAnalysis.isPending
+                              areMutationsDisabled ||
+                              submitAnalysis.isPending ||
+                              !canAnalyze
                             }
                           />
                         </Td>
@@ -502,21 +507,23 @@ export const VulnerabilitiesBySbom: React.FC<VulnerabilitiesBySbomProps> = ({
                       </Td>
                       {isEiEnabled && (
                         <Td isActionCell>
-                          <ActionsColumn
-                            items={[
-                              {
-                                title: "Request new analysis",
-                                onClick: () =>
-                                  handleRequestAnalysis(
-                                    item.vulnerability.identifier,
-                                  ),
-                                isDisabled:
-                                  areMutationsDisabled ||
-                                  submitAnalysis.isPending ||
-                                  isReanalysisDisabled,
-                              },
-                            ]}
-                          />
+                          {canAnalyze && (
+                            <ActionsColumn
+                              items={[
+                                {
+                                  title: "Request new analysis",
+                                  onClick: () =>
+                                    handleRequestAnalysis(
+                                      item.vulnerability.identifier,
+                                    ),
+                                  isDisabled:
+                                    areMutationsDisabled ||
+                                    submitAnalysis.isPending ||
+                                    isReanalysisDisabled,
+                                },
+                              ]}
+                            />
+                          )}
                         </Td>
                       )}
                     </TableRowContentWithControls>

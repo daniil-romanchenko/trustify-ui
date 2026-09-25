@@ -21,6 +21,7 @@ import PenIcon from "@patternfly/react-icons/dist/esm/icons/pen-icon";
 
 import type { AdvisorySummary } from "@app/client";
 import { LabelsAsList } from "@app/components/LabelsAsList";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyButton } from "@app/components/ReadOnlyButton";
 import { formatDate } from "@app/utils/utils";
 
@@ -31,6 +32,7 @@ interface InfoProps {
 }
 
 export const Overview: React.FC<InfoProps> = ({ advisory }) => {
+  const { hasPermission } = React.useContext(PermissionsContext);
   const [showEditLabels, setShowEditLabels] = React.useState(false);
 
   const closeEditLabelsModal = () => {
@@ -66,15 +68,17 @@ export const Overview: React.FC<InfoProps> = ({ advisory }) => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>
                     Labels {""}
-                    <ReadOnlyButton
-                      variant={ButtonVariant.link}
-                      size="sm"
-                      icon={<PenIcon />}
-                      iconPosition="end"
-                      onClick={() => setShowEditLabels(true)}
-                    >
-                      Edit
-                    </ReadOnlyButton>
+                    {hasPermission("update.advisory") && (
+                      <ReadOnlyButton
+                        variant={ButtonVariant.link}
+                        size="sm"
+                        icon={<PenIcon />}
+                        iconPosition="end"
+                        onClick={() => setShowEditLabels(true)}
+                      >
+                        Edit
+                      </ReadOnlyButton>
+                    )}
                   </DescriptionListTerm>
                   <DescriptionListDescription>
                     <Card isCompact>
