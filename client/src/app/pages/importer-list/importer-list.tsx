@@ -399,11 +399,10 @@ export const ImporterList: React.FC = () => {
                           )}
                         </Td>
                         <Td isActionCell>
-                          <ActionsColumn
-                            items={[
-                              ...(!canUpdateImporters
-                                ? []
-                                : isImporterDisabled
+                          {canUpdateImporters && (
+                            <ActionsColumn
+                              items={[
+                                ...(isImporterDisabled
                                   ? [
                                       {
                                         title: "Enable",
@@ -431,8 +430,9 @@ export const ImporterList: React.FC = () => {
                                         isDisabled: areMutationsDisabled,
                                       },
                                     ]),
-                            ]}
-                          />
+                              ]}
+                            />
+                          )}
                         </Td>
                       </TableRowContentWithControls>
                     </Tr>
