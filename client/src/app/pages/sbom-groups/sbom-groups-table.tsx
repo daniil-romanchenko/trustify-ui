@@ -17,6 +17,7 @@ import type { Group } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog.tsx";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { NotificationsContext } from "@app/components/NotificationsContext";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
 import { TableCellError } from "@app/components/TableCellError";
@@ -159,18 +160,27 @@ const SbomGroupRow: React.FC<{
   );
 
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
+  const { hasPermission } = React.useContext(PermissionsContext);
 
   const actions: IAction[] = [
-    {
-      title: "Edit",
-      onClick: () => onEdit(node),
-      isDisabled: areMutationsDisabled,
-    },
-    {
-      title: "Delete",
-      onClick: () => onDelete(node),
-      isDisabled: areMutationsDisabled,
-    },
+    ...(hasPermission("update.sbomGroup")
+      ? [
+          {
+            title: "Edit",
+            onClick: () => onEdit(node),
+            isDisabled: areMutationsDisabled,
+          },
+        ]
+      : []),
+    ...(hasPermission("delete.sbomGroup")
+      ? [
+          {
+            title: "Delete",
+            onClick: () => onDelete(node),
+            isDisabled: areMutationsDisabled,
+          },
+        ]
+      : []),
   ];
 
   const treeRow: TdProps["treeRow"] = {

@@ -154,12 +154,17 @@ export const useFetchSBOMSourceById = (key: string) => {
   };
 };
 
-export const useUploadSBOM = () => {
+/**
+ * Uploads SBOMs, optionally assigning them to a group.
+ *
+ * With scoped access, the server requires a group the user may upload into.
+ */
+export const useUploadSBOM = (group?: string) => {
   const queryClient = useQueryClient();
   return useUpload<IngestResult, { message: string }>({
     parallel: true,
     uploadFn: (formData, config) => {
-      return uploadSbom(formData, config);
+      return uploadSbom(formData, config, group);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
