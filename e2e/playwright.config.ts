@@ -56,18 +56,24 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], ...DESKTOP_CONFIG },
+      // needs a scoped server, see the "tenancy" project
+      testIgnore: "**/tenancy/**",
       dependencies: ["setup-api-data"],
     },
 
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"], ...DESKTOP_CONFIG },
+      // needs a scoped server, see the "tenancy" project
+      testIgnore: "**/tenancy/**",
       dependencies: ["setup-api-data"],
     },
 
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"], ...DESKTOP_CONFIG },
+      // needs a scoped server, see the "tenancy" project
+      testIgnore: "**/tenancy/**",
       dependencies: ["setup-api-data"],
     },
 
