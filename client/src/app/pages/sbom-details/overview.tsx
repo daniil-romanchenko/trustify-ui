@@ -23,7 +23,7 @@ import PenIcon from "@patternfly/react-icons/dist/esm/icons/pen-icon";
 
 import type { SbomSummary } from "@app/client";
 import { LabelsAsList } from "@app/components/LabelsAsList";
-import { PermissionsContext } from "@app/components/PermissionsContext";
+import { useSbomPermissions } from "@app/components/PermissionsContext";
 import { ReadOnlyButton } from "@app/components/ReadOnlyButton";
 import { decodePurl, formatDate } from "@app/utils/utils";
 
@@ -34,7 +34,7 @@ interface InfoProps {
 }
 
 export const Overview: React.FC<InfoProps> = ({ sbom }) => {
-  const { hasPermission } = React.useContext(PermissionsContext);
+  const { hasSbomPermission } = useSbomPermissions([sbom.id]);
   const [showEditLabels, setShowEditLabels] = React.useState(false);
 
   const closeEditLabelsModal = () => {
@@ -118,7 +118,7 @@ export const Overview: React.FC<InfoProps> = ({ sbom }) => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>
                     Labels {""}
-                    {hasPermission("update.sbom") && (
+                    {hasSbomPermission(sbom.id, "update.sbom") && (
                       <ReadOnlyButton
                         variant={ButtonVariant.link}
                         size="sm"

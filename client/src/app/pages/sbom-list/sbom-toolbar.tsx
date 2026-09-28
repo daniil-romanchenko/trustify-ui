@@ -13,7 +13,10 @@ import {
 import type { Group } from "@app/client";
 import { FilterToolbar } from "@app/components/FilterToolbar";
 import { KebabDropdown } from "@app/components/KebabDropdown";
-import { PermissionsContext } from "@app/components/PermissionsContext";
+import {
+  PermissionsContext,
+  useSbomPermissions,
+} from "@app/components/PermissionsContext";
 import { ReadOnlyButton } from "@app/components/ReadOnlyButton";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
@@ -78,6 +81,14 @@ export const SbomToolbar: React.FC<SbomToolbarProps> = ({
     propHelpers: { toolbarBulkSelectorProps },
   } = bulkSelectionControls;
 
+  // group assignments can only be changed for SBOMs which may be updated
+  const { hasSbomPermission } = useSbomPermissions(
+    selectedItems.map((item) => item.id),
+  );
+  const canAddSelectedToGroup =
+    selectedItems.length > 0 &&
+    selectedItems.every((item) => hasSbomPermission(item.id, "update.sbom"));
+
   return (
     <>
       <Toolbar {...toolbarProps} aria-label="sbom-toolbar">
@@ -102,7 +113,7 @@ export const SbomToolbar: React.FC<SbomToolbarProps> = ({
                 <ToolbarItem>
                   <ReadOnlyButton
                     variant="secondary"
-                    isDisabled={selectedItems.length === 0}
+                    isDisabled={!canAddSelectedToGroup}
                     onClick={() => setIsAddToGroupModalOpen(true)}
                   >
                     Add to group

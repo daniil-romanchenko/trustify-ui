@@ -20,7 +20,10 @@ import type { SbomHead } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog";
 import { LabelsAsList } from "@app/components/LabelsAsList";
 import { NotificationsContext } from "@app/components/NotificationsContext";
-import { PermissionsContext } from "@app/components/PermissionsContext";
+import {
+  PermissionsContext,
+  useSbomPermissions,
+} from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
 import { SimplePagination } from "@app/components/SimplePagination";
 import {
@@ -48,9 +51,7 @@ import { SbomSearchContext } from "./sbom-context";
 export const SbomTable: React.FC = () => {
   const { pushNotification } = React.useContext(NotificationsContext);
   const { areMutationsDisabled } = React.useContext(ReadOnlyContext);
-  const { hasPermission } = React.useContext(PermissionsContext);
-  const canUpdate = hasPermission("update.sbom");
-  const canDelete = hasPermission("delete.sbom");
+  const { isScoped, groupsWith } = React.useContext(PermissionsContext);
 
   const {
     sbomGroupId,
@@ -85,6 +86,14 @@ export const SbomTable: React.FC = () => {
   const {
     propHelpers: { getSelectCheckboxTdProps },
   } = bulkSelectionControls;
+
+  // actions are offered per SBOM, depending on the groups it is assigned to
+  const { hasSbomPermission } = useSbomPermissions(
+    currentPageItems.map((item) => item.id),
+  );
+  const canUpdateGroup =
+    !!sbomGroupId &&
+    (!isScoped || groupsWith("update.sbom").includes(sbomGroupId));
 
   const { downloadSBOM, downloadSBOMLicenses } = useDownload();
 
@@ -166,6 +175,8 @@ export const SbomTable: React.FC = () => {
           numRenderedColumns={numRenderedColumns}
         >
           {currentPageItems.map((item, rowIndex) => {
+            const canUpdate = hasSbomPermission(item.id, "update.sbom");
+            const canDelete = hasSbomPermission(item.id, "delete.sbom");
             return (
               <Tbody key={item.id} isExpanded={isCellExpanded(item)}>
                 <Tr {...getTrProps({ item })}>
@@ -298,7 +309,7 @@ export const SbomTable: React.FC = () => {
                                 },
                               ]
                             : []),
-                          ...(sbomGroupId && canUpdate
+                          ...(canUpdateGroup && canUpdate
                             ? [
                                 {
                                   title: "Delete SBOM from group",
