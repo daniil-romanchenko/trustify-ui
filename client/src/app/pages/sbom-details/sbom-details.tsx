@@ -39,7 +39,7 @@ import type { SbomHead } from "@app/client";
 import { ConfirmDialog } from "@app/components/ConfirmDialog";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { NotificationsContext } from "@app/components/NotificationsContext";
-import { PermissionsContext } from "@app/components/PermissionsContext";
+import { useSbomPermissions } from "@app/components/PermissionsContext";
 import { useDownload } from "@app/hooks/domain-controls/useDownload";
 import { useTabControls } from "@app/hooks/tab-controls";
 import { useDeleteSbomMutation, useFetchSBOMById } from "@app/queries/sboms";
@@ -54,10 +54,10 @@ import { DocumentMetadata } from "@app/components/DocumentMetadata";
 export const SbomDetails: React.FC = () => {
   const navigate = useNavigate();
   const { pushNotification } = React.useContext(NotificationsContext);
-  const { hasPermission } = React.useContext(PermissionsContext);
 
   const sbomId = useRouteParams(PathParam.SBOM_ID);
   const { sbom, isFetching, fetchError } = useFetchSBOMById(sbomId);
+  const { hasSbomPermission } = useSbomPermissions(sbom ? [sbom.id] : []);
 
   // Actions Dropdown
   const [isActionsDropdownOpen, setIsActionsDropdownOpen] =
@@ -182,7 +182,7 @@ export const SbomDetails: React.FC = () => {
                   >
                     Download License Report
                   </DropdownItem>
-                  {hasPermission("delete.sbom") && (
+                  {sbom && hasSbomPermission(sbom.id, "delete.sbom") && (
                     <>
                       <Divider component="li" key="separator" />
                       <DropdownItem
