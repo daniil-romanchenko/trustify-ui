@@ -326,6 +326,8 @@ export const useFetchSbomPermissions = (ids: string[], enabled = true) => {
     queryFn: () =>
       getSbomPermissions({ client, body: sorted, throwOnError: true }),
     enabled: enabled && sorted.length > 0,
+    // keep offering actions for SBOMs still shown, while paging or filtering
+    placeholderData: keepPreviousData,
   });
 
   return {
