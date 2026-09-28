@@ -88,6 +88,19 @@ export default defineConfig({
       dependencies: ["setup-api-data"],
     },
     {
+      // needs a server with `TRUSTD_AUTHZ_MODE=scoped`, see tests/tenancy/config.ts
+      name: "tenancy",
+      testDir: "./tests/tenancy",
+      use: {
+        ...devices["Desktop Chrome"],
+        ...DESKTOP_CONFIG,
+        baseURL:
+          process.env.TENANCY_UI_URL ??
+          process.env.TRUSTIFY_UI_URL ??
+          "http://localhost:3000/",
+      },
+    },
+    {
       name: "setup-api-data",
       testDir: "./tests/api/dependencies",
       testMatch: "*.setup.ts",
