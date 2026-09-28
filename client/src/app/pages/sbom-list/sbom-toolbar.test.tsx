@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MemoryRouter } from "react-router-dom";
 
+import {
+  type IPermissionsContext,
+  PermissionsContext,
+} from "@app/components/PermissionsContext";
 import { ReadOnlyContext } from "@app/components/ReadOnlyContext";
+import { useFetchSbomPermissions } from "@app/queries/sboms";
 import { SbomSearchContext } from "./sbom-context";
 
 import { SbomToolbar } from "./sbom-toolbar";
@@ -15,6 +20,24 @@ vi.mock("@app/queries/sbom-groups", () => ({
 vi.mock("@app/queries/recommendations", () => ({
   useIsRecommendationEnabled: () => true,
 }));
+
+vi.mock("@app/queries/sboms", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/queries/sboms")>()),
+  useFetchSbomPermissions: vi.fn(),
+}));
+
+const mockedUseFetchSbomPermissions = vi.mocked(useFetchSbomPermissions);
+mockedUseFetchSbomPermissions.mockReturnValue({
+  permissions: undefined,
+  isLoading: false,
+});
+
+const unrestricted: IPermissionsContext = {
+  isLoading: false,
+  isScoped: false,
+  hasPermission: () => true,
+  groupsWith: () => [],
+};
 
 const makeControls = (selectedIds: string[] = []) => ({
   tableControls: {
@@ -34,18 +57,46 @@ const makeControls = (selectedIds: string[] = []) => ({
   } as never,
 });
 
-const renderToolbar = (selectedIds: string[] = []) =>
+const renderToolbar = (
+  selectedIds: string[] = [],
+  permissions: IPermissionsContext = unrestricted,
+) =>
   render(
     <MemoryRouter>
       <ReadOnlyContext.Provider
         value={{ isLoading: false, areMutationsDisabled: false }}
       >
-        <SbomSearchContext.Provider value={makeControls(selectedIds) as never}>
-          <SbomToolbar showActions />
-        </SbomSearchContext.Provider>
+        <PermissionsContext.Provider value={permissions}>
+          <SbomSearchContext.Provider
+            value={makeControls(selectedIds) as never}
+          >
+            <SbomToolbar showActions />
+          </SbomSearchContext.Provider>
+        </PermissionsContext.Provider>
       </ReadOnlyContext.Provider>
     </MemoryRouter>,
   );
+
+describe("SbomToolbar – Add to group button", () => {
+  it("is enabled when all selected SBOMs may be updated", () => {
+    renderToolbar(["id-1", "id-2"]);
+
+    expect(screen.getByRole("button", { name: "Add to group" })).toBeEnabled();
+  });
+
+  it("is disabled when a selected SBOM may not be updated, when scoped", () => {
+    mockedUseFetchSbomPermissions.mockReturnValueOnce({
+      permissions: {
+        "id-1": ["read.sbom", "update.sbom"],
+        "id-2": ["read.sbom"],
+      },
+      isLoading: false,
+    });
+    renderToolbar(["id-1", "id-2"], { ...unrestricted, isScoped: true });
+
+    expect(screen.getByRole("button", { name: "Add to group" })).toBeDisabled();
+  });
+});
 
 describe("SbomToolbar – Generate remediation report button", () => {
   it("is disabled when no SBOMs are selected", () => {

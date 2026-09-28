@@ -20,6 +20,7 @@ import {
   downloadSbom,
   getSbom,
   getSbomAdvisories,
+  getSbomPermissions,
   listAllLicenseIds,
   listModels,
   listRelatedSboms,
@@ -304,6 +305,26 @@ export const useFetchModelsBySbomId = (
   };
 };
 
+/**
+ * Fetches the permissions of the calling user on individual SBOMs, by SBOM ID.
+ *
+ * SBOMs which aren't visible are absent from the result.
+ */
+export const useFetchSbomPermissions = (ids: string[], enabled = true) => {
+  const sorted = [...new Set(ids)].sort();
+  const { data, isLoading } = useQuery({
+    queryKey: [SBOMsQueryKey, "permissions", sorted],
+    queryFn: () =>
+      getSbomPermissions({ client, body: sorted, throwOnError: true }),
+    enabled: enabled && sorted.length > 0,
+  });
+
+  return {
+    permissions: data?.data,
+    isLoading,
+  };
+};
+
 export const useAddSBOMsToGroupsMutation = (
   onSuccess: (payload: { group: Group; sboms: SbomHead[] }) => void,
   onError: (err: AxiosError) => void,
@@ -324,6 +345,9 @@ export const useAddSBOMsToGroupsMutation = (
     onSuccess: async (_response, payload) => {
       await queryClient.invalidateQueries({
         queryKey: [SBOMsQueryKey, payload.group.id],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [SBOMsQueryKey, "permissions"],
       });
       onSuccess(payload);
     },
@@ -351,6 +375,9 @@ export const useRemoveSBOMFromGroupMutation = (
     onSuccess: async (_response, payload) => {
       await queryClient.invalidateQueries({
         queryKey: [SBOMsQueryKey, payload.groupId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [SBOMsQueryKey, "permissions"],
       });
       onSuccess(payload);
     },
