@@ -226,3 +226,38 @@ The [Playwright MCP](https://github.com/microsoft/playwright-mcp) server can be 
 7. Review the steps and step definitions added under `auto-generated.step.ts` located under relevant feature file directory
 8. Move the auto generated steps to relevant step definition files
 9. Make sure to commit the changes with commit message `Assisted-by: <name of code assistant>`
+
+## Running the Tenancy Tests
+
+The `tenancy` project tests scoped authorization end to end: it sets up SBOM
+groups, users, role bindings and an API key like an orchestration platform
+would, then checks the API and the UI as an editor, a viewer and an uploader.
+It isn't part of `npm run test`, as it needs a differently configured server:
+
+1. Start Keycloak with the realm from Trustify's
+   `etc/deploy/compose/compose-sso.yaml`, then add the tenancy identities
+   (an `update:document` scope, a `trustify:manage` scope for the
+   `testing-manager` client, a password-grant client `e2e-cli`, and the users
+   `alice`, `bob` and `carol`):
+
+   ```shell
+   KCADM_PATH=/path/to/keycloak/bin/kcadm.sh etc/tenancy/keycloak-setup.sh
+   ```
+
+2. Start Trustify with scoped authorization, and the scope mappings from
+   `etc/tenancy/auth.json`:
+
+   ```shell
+   trustd api --authz-mode scoped --auth-configuration etc/tenancy/auth.json
+   ```
+
+3. Start the UI against it, e.g. `TRUSTIFY_API_URL=http://localhost:8080
+   OIDC_SERVER_URL=http://localhost:8090/realms/trustify OIDC_CLIENT_ID=frontend
+   npm run start` in the repository root, and run the tests:
+
+   ```shell
+   TENANCY_UI_URL=http://localhost:3000 TENANCY_API_URL=http://localhost:8080 npm run test:tenancy
+   ```
+
+The tests use unique names for everything they create, so they can be repeated
+against the same server. See `tests/tenancy/config.ts` for all settings.
