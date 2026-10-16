@@ -20,6 +20,7 @@ import {
   HookFormPFTextArea,
   HookFormPFTextInput,
 } from "@app/components/HookFormPFFields";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 import { LABEL_VALIDATION_REGEX, PRODUCT_LABEL_KEY } from "@app/Constants";
 import { getString } from "@app/utils/utils";
 
@@ -41,6 +42,8 @@ const labelToOption = (label: string): AutocompleteOptionProps => ({
 export const GroupForm: React.FC<GroupFormProps> = ({ form }) => {
   const { control, watch } = form;
   const isProduct = watch("isProduct");
+  const { isScoped, groupsWith } = React.useContext(PermissionsContext);
+  const parents = new Set(groupsWith("create.sbomGroup"));
 
   const [isAdvancedExpanded, setIsAdvancedExpanded] = React.useState(false);
 
@@ -53,7 +56,11 @@ export const GroupForm: React.FC<GroupFormProps> = ({ form }) => {
         fieldId="parent-group-id"
         helperText="Leave blank if this group does not have a parent"
         renderInput={({ field: { onChange, value } }) => (
-          <SbomGroupSelect value={value || undefined} onChange={onChange} />
+          <SbomGroupSelect
+            value={value || undefined}
+            onChange={onChange}
+            isSelectable={(group) => !isScoped || parents.has(group.id)}
+          />
         )}
       />
 

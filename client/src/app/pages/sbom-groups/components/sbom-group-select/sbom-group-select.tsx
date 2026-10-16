@@ -18,11 +18,17 @@ import { useFetchSBOMGroups } from "@app/queries/sbom-groups";
 interface ISbomGroupSelectProps {
   value?: Group;
   onChange: (value?: Group) => void;
+  /**
+   * Whether a group may be chosen, all groups by default. Other groups are shown disabled, but
+   * can still be drilled into, as their children may be selectable.
+   */
+  isSelectable?: (group: Group) => boolean;
 }
 
 export const SbomGroupSelect: React.FC<ISbomGroupSelectProps> = ({
   value,
   onChange,
+  isSelectable = () => true,
 }) => {
   const [searchQuery, setSearchQuery] = React.useState<SearchQuery>({
     type: "drillIn",
@@ -73,6 +79,7 @@ export const SbomGroupSelect: React.FC<ISbomGroupSelectProps> = ({
       name: group.name,
       hasChildren: (group.number_of_groups ?? 0) > 0,
       value: group,
+      ...(!isSelectable(group) && { itemProps: { isAriaDisabled: true } }),
     };
 
     switch (searchQuery.type) {
@@ -83,6 +90,7 @@ export const SbomGroupSelect: React.FC<ISbomGroupSelectProps> = ({
         return {
           ...option,
           itemProps: {
+            ...option.itemProps,
             description: parentsChain,
           },
         };
@@ -99,7 +107,11 @@ export const SbomGroupSelect: React.FC<ISbomGroupSelectProps> = ({
       isLoading={isFetching}
       fetchError={fetchError ?? undefined}
       value={value ? groupToOption(value) : undefined}
-      onChange={(option) => onChange(option?.value ?? null)}
+      onChange={(option) => {
+        if (!option?.value || isSelectable(option.value)) {
+          onChange(option?.value ?? null);
+        }
+      }}
       searchQuery={searchQuery}
       onSearchQueryChange={setSearchQuery}
       placeholder={"Select parent group"}

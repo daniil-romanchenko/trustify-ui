@@ -315,6 +315,22 @@ test.describe("Scoped authorization", { tag: "@tenancy" }, () => {
       await expect(addToGroup).toBeDisabled();
       await select(state.sbomPayments.name);
       await expect(addToGroup).toBeEnabled();
+
+      // only groups with update access can be chosen
+      await addToGroup.click();
+      const dialog = page.getByRole("dialog");
+      const picker = dialog.getByRole("button", {
+        name: /Select parent group/,
+      });
+      await picker.click();
+      await dialog.getByPlaceholder("Find by name").fill(run);
+      const option = (name: string) =>
+        dialog.getByRole("menuitem", { name: new RegExp(`^${name}`) });
+      await expect(option(state.payments.name)).toBeEnabled();
+      await expect(option(state.web.name)).toBeDisabled();
+      await picker.click();
+      await dialog.getByRole("button", { name: "cancel" }).click();
+
       await select(state.sbomWeb.name);
       await expect(addToGroup).toBeDisabled();
     });

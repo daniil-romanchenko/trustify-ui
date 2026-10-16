@@ -1,8 +1,9 @@
-import type React from "react";
+import React from "react";
 
 import { Form } from "@patternfly/react-core";
 
 import { HookFormPFGroupController } from "@app/components/HookFormPFFields";
+import { PermissionsContext } from "@app/components/PermissionsContext";
 
 import { SbomGroupSelect } from "@app/pages/sbom-groups/components/sbom-group-select/sbom-group-select";
 import type { useAddToGroupForm } from "./useAddToGroupForm";
@@ -15,6 +16,8 @@ export interface IAddToGroupFormProps {
 
 export const AddToGroupForm: React.FC<IAddToGroupFormProps> = ({ form }) => {
   const { control } = form;
+  const { isScoped, groupsWith } = React.useContext(PermissionsContext);
+  const permitted = new Set(groupsWith("update.sbom"));
 
   return (
     <Form>
@@ -26,7 +29,11 @@ export const AddToGroupForm: React.FC<IAddToGroupFormProps> = ({ form }) => {
         isRequired
         renderInput={({ field: { onChange, value } }) => {
           return (
-            <SbomGroupSelect value={value || undefined} onChange={onChange} />
+            <SbomGroupSelect
+              value={value || undefined}
+              onChange={onChange}
+              isSelectable={(group) => !isScoped || permitted.has(group.id)}
+            />
           );
         }}
       />
