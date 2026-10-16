@@ -89,6 +89,16 @@ export class SbomGroupListPage {
     return this._page.getByRole("treegrid");
   }
 
+  /**
+   * Whether the (filtered) list shows the group, once the list stopped loading.
+   *
+   * Counting rows right away races with the request for the filtered list.
+   */
+  async hasGroup(groupName: string): Promise<boolean> {
+    await this._page.waitForLoadState("networkidle");
+    return (await this.getGroupRow(groupName).count()) > 0;
+  }
+
   getGroupRow(groupName: string): Locator {
     return this.getTreegrid()
       .getByRole("row")

@@ -73,8 +73,7 @@ Given("A group {string} exists", async ({ page }, groupName: string) => {
   const toolbar = await listPage.getToolbar();
   await toolbar.applyFilter({ Filter: groupName });
 
-  const row = listPage.getGroupRow(groupName);
-  if ((await row.count()) === 0) {
+  if (!(await listPage.hasGroup(groupName))) {
     const modal = await listPage.toolbarOpenCreateGroupModal();
     await modal.clearAndFillName(groupName);
     await modal.fillDescription(`Test description for ${groupName}`);
@@ -93,8 +92,7 @@ Given(
     const toolbar = await listPage.getToolbar();
     await toolbar.applyFilter({ Filter: groupName });
 
-    const row = listPage.getGroupRow(groupName);
-    if ((await row.count()) === 0) {
+    if (!(await listPage.hasGroup(groupName))) {
       const modal = await listPage.toolbarOpenCreateGroupModal();
       await modal.clearAndFillName(groupName);
       await modal.fillDescription(description);
@@ -487,8 +485,7 @@ Given(
     const toolbar = await listPage.getToolbar();
     await toolbar.applyFilter({ Filter: groupName });
 
-    const row = listPage.getGroupRow(groupName);
-    if ((await row.count()) === 0) {
+    if (!(await listPage.hasGroup(groupName))) {
       const modal = await listPage.toolbarOpenCreateGroupModal();
       await modal.clearAndFillName(groupName);
       await modal.fillDescription(`Test description for ${groupName}`);
