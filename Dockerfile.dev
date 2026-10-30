@@ -18,6 +18,15 @@ FROM registry.access.redhat.com/ubi9/nodejs-24-minimal:latest
 USER 0
 RUN microdnf -y install tar procps-ng && microdnf clean all
 
+# Refuse to build on a stale base image whose Node bundles a Brotli decoder
+# affected by CVE-2026-111497 (fixed in Node 24.22.1)
+RUN node -e ' \
+  const [major, minor, patch] = process.versions.node.split(".").map(Number); \
+  if (major === 24 && (minor < 22 || (minor === 22 && patch < 1))) { \
+    console.error(`Node ${process.versions.node} is affected by CVE-2026-111497, need >= 24.22.1`); \
+    process.exit(1); \
+  }'
+
 USER 1001
 
 LABEL name="trustify/trustify-ui" \
